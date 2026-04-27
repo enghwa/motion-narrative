@@ -399,30 +399,6 @@ Read SKILL.md completely before starting any video project.
 
 ---
 
-## ⚠️ Known Issues for Agents
-
-### GSAP `from()` Blank Frames
-**v2's `class="clip"` model** sets `display: none` on inactive scenes. If using GSAP `from()`/`fromTo()`, the "from" state is applied at timeline creation → elements get `opacity: 0` while hidden → **blank frames**.
-
-**Fix**: Add `onRefresh` to force visibility:
-```javascript
-tl.from([".scene-00 .txt", ".scene-00 img"], {
-  opacity: 0,
-  scale: 0.92,
-  stagger: 0.08,
-  duration: 0.6,
-  ease: "power2.out",
-  onRefresh: (self) => {
-    // Force visibility during setup
-    self.targets().forEach(el => el.style.display = "block");
-  }
-});
-```
-
-See **Step 8** in SKILL.md for complete details.
-
----
-
 ## 📦 Agent Platform Reference
 
 | Platform | Install Command | Skill Location |
