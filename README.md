@@ -87,17 +87,213 @@ git clone https://github.com/enghwa/motion-narrative.git
 
 ## 🛠️ Prerequisites
 
+| Tool | Required | Version | Purpose |
+|------|----------|---------|---------|
+| **Node.js** | ✅ Yes | >= 22 | HyperFrames runtime |
+| **ffmpeg** | ✅ Yes | any recent | Video encoding |
+| **ffprobe** | ✅ Yes | any recent | Media analysis (bundled with ffmpeg) |
+| **bash** | ✅ Yes | any | Skill scripts execution |
+| **Python 3** | ⚠️ Recommended | 3.8+ | Advanced audio ducking |
+| **jq** | ⚠️ Recommended | any | JSON processing |
+| **edge-tts** | ❌ Optional | latest | Cloud TTS (Azure) |
+
+---
+
+## 🔍 Prerequisites Check (Windows & macOS)
+
+Run these commands in your terminal to verify your environment:
+
+### Option 1: Quick Copy-Paste
+
 ```bash
-node --version          # >= 22
-ffmpeg -version         # any recent version
-ffprobe -version        # any recent version
-npx hyperframes --help  # auto-installs on first run
+# Check all core dependencies at once
+echo "=== Node.js ===" && node --version
+echo "=== FFmpeg ===" && ffmpeg -version | head -1
+echo "=== FFprobe ===" && ffprobe -version | head -1
+echo "=== Bash ===" && bash --version | head -1
+echo "=== Python3 ===" && python3 --version
+echo "=== jq ===" && jq --version
+echo "=== edge-tts ===" && pip3 show edge-tts | grep Version
 ```
 
-Optional TTS:
+### Option 2: Detailed Platform-Specific Checks
+
+#### macOS (Terminal or iTerm2)
+
 ```bash
-pip install edge-tts    # Azure TTS (cloud)
-# OR: npx hyperframes tts  # Kokoro (local, no API key)
+# 1. Node.js (should show v22.x.x or higher)
+node --version
+
+# If missing: brew install node
+# Or download from: https://nodejs.org
+
+# 2. FFmpeg & FFprobe (bundled together)
+ffmpeg -version
+ffprobe -version
+
+# If missing: brew install ffmpeg
+# Or download from: https://ffmpeg.org/download.html
+
+# 3. Bash (usually pre-installed on macOS)
+bash --version
+
+# 4. Python 3 (usually pre-installed)
+python3 --version
+
+# 5. jq (optional, for advanced scripts)
+jq --version
+
+# If missing: brew install jq
+
+# 6. edge-tts (optional, for cloud voice)
+pip3 install edge-tts
+
+# Verify: pip3 show edge-tts
+```
+
+#### Windows (PowerShell or CMD)
+
+```powershell
+# 1. Node.js (should show v22.x.x or higher)
+node --version
+
+# If missing:
+# - Download from: https://nodejs.org (LTS version)
+# - Or use winget: winget install OpenJS.NodeJS
+
+# 2. FFmpeg & FFprobe (bundled together)
+ffmpeg -version
+ffprobe -version
+
+# If missing:
+# - Download from: https://ffmpeg.org/download.html (Windows builds)
+# - Extract to C:\ffmpeg and add C:\ffmpeg\bin to your PATH
+# - Or use winget: winget install Gyan.FFmpeg
+
+# 3. Bash (Windows 10/11 with WSL or Git Bash)
+# Option A - WSL (recommended):
+#    wsl --install
+#    Then run: wsl bash --version
+#
+# Option B - Git Bash (included with Git for Windows):
+#    Download: https://git-scm.com/download/win
+#    Bash location: "C:\Program Files\Git\bin\bash.exe"
+
+# 4. Python 3 (optional, for ducking)
+python --version
+
+# If missing: Download from https://python.org
+
+# 5. jq (optional)
+# Download from: https://stedolan.github.io/jq/download/
+# Or use winget: winget install stedolan.jq
+
+# 6. edge-tts (optional)
+pip install edge-tts
+
+# Verify: pip show edge-tts
+```
+
+### Option 3: Automated Check Script
+
+Save this as `check-deps.sh` and run it:
+
+```bash
+#!/bin/bash
+# Dependencies check for motion-narrative skill
+
+echo "========================================="
+echo "Motion Narrative Dependencies Check"
+echo "========================================="
+echo ""
+
+check_tool() {
+    local cmd=$1
+    local name=$2
+    local required=$3
+    local install_hint=$4
+    
+    if command -v $cmd &> /dev/null; then
+        local version=$($cmd --version 2>/dev/null | head -1 || echo "installed")
+        echo "✅ $name: $version"
+    else
+        if [ "$required" = "required" ]; then
+            echo "❌ $name: MISSING (REQUIRED)"
+            echo "   Install: $install_hint"
+        else
+            echo "⚠️  $name: missing (optional - $install_hint)"
+        fi
+    fi
+}
+
+check_tool "node" "Node.js" "required" "https://nodejs.org (v22+)"
+check_tool "ffmpeg" "FFmpeg" "required" "https://ffmpeg.org/download.html"
+check_tool "ffprobe" "FFprobe" "required" "(bundled with FFmpeg)"
+check_tool "bash" "Bash" "required" "Pre-installed on macOS/Linux or use WSL/Git Bash on Windows"
+check_tool "python3" "Python 3" "optional" "https://python.org (needed for audio ducking)"
+check_tool "jq" "jq" "optional" "brew install jq (macOS) or winget install stedolan.jq (Windows)"
+
+echo ""
+echo "========================================="
+echo "Optional pip packages:"
+echo "========================================="
+echo ""
+
+if pip3 show edge-tts &> /dev/null; then
+    echo "✅ edge-tts: $(pip3 show edge-tts | grep Version | cut -d' ' -f2)"
+else
+    echo "⚠️  edge-tts: not installed (pip3 install edge-tts)"
+fi
+
+echo ""
+echo "========================================="
+```
+
+**Run with:**
+- macOS/Linux: `bash check-deps.sh`
+- Windows (WSL/Git Bash): `bash check-deps.sh`
+
+---
+
+## 📦 Installation Quick Fixes
+
+### macOS (using Homebrew)
+
+```bash
+# If you don't have Homebrew:
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install everything needed:
+brew install node ffmpeg jq python3
+
+# Optional: pip3 install edge-tts
+```
+
+### Windows
+
+```powershell
+# Using winget (built-in on Windows 10/11):
+winget install OpenJS.NodeJS
+winget install Gyan.FFmpeg
+winget install stedolan.jq
+
+# Install Python from Microsoft Store:
+winget install Python.Python.3.12
+
+# For bash, install WSL or Git for Windows:
+winget install Microsoft.WindowsSubsystemforLinux
+# OR
+winget install Git.Git
+```
+
+### Linux (Ubuntu/Debian)
+
+```bash
+# Install everything:
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs ffmpeg python3 python3-pip jq
+
+# Optional: pip3 install edge-tts
 ```
 
 ---
